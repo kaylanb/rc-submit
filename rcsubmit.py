@@ -23,7 +23,7 @@ class Cluster():
     
     def ssh(self, *cmds):
         return subprocess.check_output("{} '{}'".format(self.ssh_cmd, " && ".join(cmds),
-                                       shell=True)
+                                       shell=True))
     
     def copy_files(self, files):
         return subprocess.check_output("scp {} {}:~/{}/".format(" ".join(files), self.name, self.remote_dir),
@@ -132,21 +132,21 @@ class Submission():
         self.ssh(self.cd_wd_cm, self.replace_wd_cmd, self.submit_job_cmd)
           
     
-       # wait for job to complete?
-       if not self.do_wait:
-           # return pickle???
-           return
+        # wait for job to complete?
+        if not self.do_wait:
+            # return pickle???
+            return
            
-       while self.status != 'Complete':
-           # TODO: logger with current status
-           sleep(60)
+        while self.status != 'Complete':
+            # TODO: logger with current status
+            sleep(60)
            
-       self.endrun()
+        self.endrun()
        
     
-s = Submission('recognized_server_name', 'qsub', 'PBSfilename', ['other', 'files', 'to', 'copy', 'including/*txt'])
-s = Submission(StarCluster('mycluster'), 'qsub', 'job.pbs', 'script.py').run()
-s = Submission(Cluster('estrella'), 'qsub', 'job.pbs', 'script.py').run()
+# s = Submission('recognized_server_name', 'qsub', 'PBSfilename', ['other', 'files', 'to', 'copy', 'including/*txt'])
+# s = Submission(StarCluster('mycluster'), 'qsub', 'job.pbs', 'script.py').run()
+# s = Submission(Cluster('estrella'), 'qsub', 'job.pbs', 'script.py').run()
 
 
 # TODO: figure out what files to retrieve
