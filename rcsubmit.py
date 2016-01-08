@@ -2,6 +2,7 @@
 import os
 import subprocess
 import commands
+import time
 from glob import glob
 
 class Cluster(object):
@@ -61,8 +62,6 @@ class StarCluster(Cluster):
             print "***", "starcluster put {} {} {}/".format(self.name, f, self.remote_dir)
             os.system("starcluster put {} {} {}/".format(self.name, f, self.remote_dir))
 
-        #self.ssh("scp -r {} node001:/home/".format(self.remote_dir))
-
     def pull_files(self, files):
         for f in files:
             print "***", "starcluster get {} {} ./".format(self.name, os.path.join(self.remote_dir, f))
@@ -86,8 +85,7 @@ class StarCluster(Cluster):
                
 
 class Submission():
-    def __init__(self, cluster, submit_cmd, submit_file=False, tag_wd='<<WD>>', 
-        do_wait=True, *files):
+    def __init__(self, cluster, submit_cmd, submit_file=False, *files):
         """
         Args:
             cluster (Cluster): Cluster that job should be submitted to.
@@ -107,8 +105,8 @@ class Submission():
             self.local_files += glob(f)
 
         self.submit_file = os.path.basename(submit_file) if submit_file else ""
-        self.tag_wd = tag_wd
-        self.do_wait = do_wait
+        #self.tag_wd = tag_wd
+        #self.do_wait = do_wait
         
         self._status = 'Not Started'
         
@@ -152,24 +150,25 @@ class Submission():
         
     def endrun(self):
         self.retrieve_results()
-        self.cluster.terminate()
+        # self.cluster.terminate()
     
     def run(self):
         self.cluster.start()
         self._status = 'Running'
             
-        self.server.push_files(self.local_files)
-        self.ssh(self.cd_wd_cm, self.replace_wd_cmd, self.submit_job_cmd)
+        self.cluster.push_files(self.local_files)
+        # self.cluster.ssh(self.cd_wd_cmd, self.replace_wd_cmd, self.submit_job_cmd)
+        self.cluster.ssh(self.cd_wd_cmd, self.submit_job_cmd)
           
     
         # wait for job to complete?
-        if not self.do_wait:
+        #if not self.do_wait:
             # return pickle???
-            return
+        #    return
            
-        while self.status != 'Complete':
+        #while self.status != 'Complete':
             # TODO: logger with current status
-            sleep(60)
+        #    time.sleep(60)
            
         self.endrun()
        

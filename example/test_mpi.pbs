@@ -1,0 +1,7 @@
+#/bin/bash
+
+#PBS -V
+#PBS -N myjob
+#PBS -l walltime=24:00:00
+
+mpirun python test_mpi.py

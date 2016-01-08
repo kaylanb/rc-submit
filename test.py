@@ -18,6 +18,6 @@ time.sleep(10)
 sc.pull_files(['hello_world.out'])
 
 
-#submission = rcsubmit.Submission(sc, 'qsub', 'job.pbs', 'test.sh')
+#submission = rcsubmit.Submission(sc, 'qsub', 'test_mpi.pbs', 'test_mpi.py')
 #submission.run()
 
