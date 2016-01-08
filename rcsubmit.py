@@ -1,8 +1,9 @@
 
 import os
+import subprocess
 from glob import glob
 
-class Cluster():
+class Cluster(object):
     def __init__(self, name, remote_dir=None):
         self._name = name
         if remote_dir is None:
@@ -22,8 +23,9 @@ class Cluster():
         return 'ssh {}'.format(self.name)
     
     def ssh(self, *cmds):
-        return subprocess.check_output("{} '{}'".format(self.ssh_cmd, " && ".join(cmds),
-                                       shell=True))
+        print "{} '{}'".format(self.ssh_cmd, " && ".join(cmds))
+        return subprocess.check_output("{} '{}'".format(self.ssh_cmd, " && ".join(cmds)),
+                                       shell=True)
     
     def copy_files(self, files):
         return subprocess.check_output("scp {} {}:~/{}/".format(" ".join(files), self.name, self.remote_dir),
@@ -36,12 +38,18 @@ class Cluster():
         pass
         
 class StarCluster(Cluster):
+    def __init__(self, name):
+        self._name = name
+        #self.start()
+        super(StarCluster, self).__init__(name)
+
     @property
     def ssh_cmd(self):
-        return 'ssh starcluster'
+        return 'starcluster sshmaster {}'.format(self.name)
+
     def copy_files(self,files):
-        for f in files:
-            os.system("starcluster put {} {} {}".format(self.name,f,self.remote_dir))
+        for f in files: 
+            os.system("starcluster put {} {} {}".format(self.name, f, self.remote_dir))
     def start(self):
         import commands
         clusters = commands.getoutput("starcluster listinstances").split('>>> ')[1:]
