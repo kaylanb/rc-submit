@@ -27,9 +27,12 @@ class Cluster(object):
         return subprocess.check_output("{} '{}'".format(self.ssh_cmd, " && ".join(cmds)),
                                        shell=True)
     
-    def copy_files(self, files):
+    def push_files(self, files):
         return subprocess.check_output("scp {} {}:~/{}/".format(" ".join(files), self.name, self.remote_dir),
                                        shell=True)
+
+    def pull_files(self, files):
+        return subprocess.check_output("scp {}:'{}' ./".format(self.name, " ".join(["~/{}".format(os.path.join(self.remote_dir, f)) for f in files])))
         
     def start(self):
         pass
@@ -38,21 +41,32 @@ class Cluster(object):
         pass
         
 class StarCluster(Cluster):
-    def __init__(self, name):
+    def __init__(self, name, remote_dir=None):
         self._name = name
+        if remote_dir is None:
+            remote_dir = 'blah_todo'
+        remote_dir = os.path.join('/root', remote_dir)
         self.start()
-        super(StarCluster, self).__init__(name)
+        super(StarCluster, self).__init__(name, remote_dir=remote_dir)
 
     @property
     def ssh_cmd(self):
         return 'starcluster sshmaster {}'.format(self.name)
 
-    def copy_files(self,files):
+    def push_files(self,files):
         for f in files: 
-            os.system("starcluster put {} {} {}".format(self.name, f, self.remote_dir))
+            print "***", "starcluster put {} {} {}/".format(self.name, f, self.remote_dir)
+            os.system("starcluster put {} {} {}/".format(self.name, f, self.remote_dir))
+
+    def pull_files(self, files):
+        for f in files:
+            print "***", "starcluster get {} {} ./".format(self.name, os.path.join(self.remote_dir, f))
+            os.system("starcluster get {} {} ./".format(self.name, os.path.join(self.remote_dir, f)))
+
     def start(self):
         import commands
-        clusters = commands.getoutput("starcluster listinstances") #.split('>>> ')[1:]
+        # this could cause problems for certain cluster names that are found elsewhere in the output
+        clusters = commands.getoutput("starcluster listinstances")
         if self.name in clusters:
             self._did_start = False
         else:
@@ -136,7 +150,7 @@ class Submission():
         self.cluster.start()
         self._status = 'Running'
             
-        self.server.copy_files(self.local_files)
+        self.server.push_files(self.local_files)
         self.ssh(self.cd_wd_cm, self.replace_wd_cmd, self.submit_job_cmd)
           
     
