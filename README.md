@@ -38,9 +38,9 @@ starcluster createkey mykey -o ~/.ssh/starcluster.rsa
 KEY_LOCATION=~/.ssh/starcluster.rsa
 
 
-
-$ starcluster startcluster smallcluster
+$ starcluster start smallcluster
 $ starcluster sshmaster smallcluster
+$ starcluster stop smallcluster
 $ starcluster terminate smallcluster
 
 
