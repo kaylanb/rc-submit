@@ -1,6 +1,7 @@
 
 import os
 import subprocess
+import commands
 from glob import glob
 
 class Cluster(object):
@@ -9,12 +10,14 @@ class Cluster(object):
         if remote_dir is None:
             self._temp_remote_dir = True
             self._remote_dir = '~/blah_todo'
-            self.ssh('mkdir -p {}'.format(self.remote_dir))
         else:
             self._temp_remote_dir = False
             self._remote_dir = remote_dir
+        self.ssh('mkdir -p {}'.format(self.remote_dir))
+
     @property
     def name(self): return self._name
+
     @property
     def remote_dir(self): return self._remote_dir
 
@@ -23,7 +26,7 @@ class Cluster(object):
         return 'ssh {}'.format(self.name)
     
     def ssh(self, *cmds):
-        print "{} '{}'".format(self.ssh_cmd, " && ".join(cmds))
+        print "***", "{} '{}'".format(self.ssh_cmd, " && ".join(cmds))
         return subprocess.check_output("{} '{}'".format(self.ssh_cmd, " && ".join(cmds)),
                                        shell=True)
     
@@ -45,7 +48,7 @@ class StarCluster(Cluster):
         self._name = name
         if remote_dir is None:
             remote_dir = 'blah_todo'
-        remote_dir = os.path.join('/root', remote_dir)
+        remote_dir = os.path.join('/home', remote_dir)
         self.start()
         super(StarCluster, self).__init__(name, remote_dir=remote_dir)
 
@@ -58,13 +61,14 @@ class StarCluster(Cluster):
             print "***", "starcluster put {} {} {}/".format(self.name, f, self.remote_dir)
             os.system("starcluster put {} {} {}/".format(self.name, f, self.remote_dir))
 
+        #self.ssh("scp -r {} node001:/home/".format(self.remote_dir))
+
     def pull_files(self, files):
         for f in files:
             print "***", "starcluster get {} {} ./".format(self.name, os.path.join(self.remote_dir, f))
             os.system("starcluster get {} {} ./".format(self.name, os.path.join(self.remote_dir, f)))
 
     def start(self):
-        import commands
         # this could cause problems for certain cluster names that are found elsewhere in the output
         clusters = commands.getoutput("starcluster listinstances")
         if self.name in clusters:
@@ -72,6 +76,9 @@ class StarCluster(Cluster):
         else:
             self._did_start = True
             os.system("starcluster start {}".format(self.name))
+
+            # now we need to make sure the /home directory is shared to all nodes via NFS
+            self.ssh("for i in `qhost | grep 'node' | cut -d ' ' -f 1`; do ssh node${i} mount; done")
         
     def terminate(self):
         if self._did_start:
@@ -85,7 +92,7 @@ class Submission():
         Args:
             cluster (Cluster): Cluster that job should be submitted to.
             submit_cmd (str): Command that should be used to submit the job to 
-                the cluster. (e.g. qsub for Moab Torque scheduler)
+                the cluster. (e.g. qsub for Moab Torque schedulerq, sbatch for slurm)
             submit_file (str): Job submission script.
             \*files (str): Optional files that should be copied over to the  
                 cluster for the job.
@@ -120,6 +127,7 @@ class Submission():
     @property
     def submit_job_cmd(self):
         return "{} {}".format(self.submit_cmd, self.submit_file)
+
     def submit_job(self):
         self.ssh(self.cd_wd_cmd, self.submit_job_cmd)
         
