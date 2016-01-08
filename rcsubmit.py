@@ -9,7 +9,7 @@ class Cluster(object):
         if remote_dir is None:
             self._temp_remote_dir = True
             self._remote_dir = '~/blah_todo'
-            self.ssh('mkdir {}'.format(self.remote_dir))
+            self.ssh('mkdir -p {}'.format(self.remote_dir))
         else:
             self._temp_remote_dir = False
             self._remote_dir = remote_dir
@@ -40,7 +40,7 @@ class Cluster(object):
 class StarCluster(Cluster):
     def __init__(self, name):
         self._name = name
-        #self.start()
+        self.start()
         super(StarCluster, self).__init__(name)
 
     @property
@@ -52,7 +52,7 @@ class StarCluster(Cluster):
             os.system("starcluster put {} {} {}".format(self.name, f, self.remote_dir))
     def start(self):
         import commands
-        clusters = commands.getoutput("starcluster listinstances").split('>>> ')[1:]
+        clusters = commands.getoutput("starcluster listinstances") #.split('>>> ')[1:]
         if self.name in clusters:
             self._did_start = False
         else:
